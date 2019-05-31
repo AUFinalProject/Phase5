@@ -23,7 +23,6 @@ class createDATA:
     __images_path = ""                        # path to folder of images from first page
     # path to folder of JavaScript from pdf file
     __texts_path = ""
-    __csv_path = ""                           # path to csv of text from first page
     # dictionary for translate PDF language to tessaract language
     __lan_lst = {
         "en-us": "eng",
@@ -47,7 +46,6 @@ class createDATA:
         self.__folder_path = folder_path
         self.__images_path = folder_path + "/IMAGES"
         self.__texts_path = folder_path + "/TEXTS"
-        self.__csv_path = folder_path + "pdfFILES.csv"
 
     # this function update ans_list
     def add_ans_list(self, save_dir, base_filename, filename):
@@ -163,3 +161,7 @@ class createDATA:
                 return False
         print("[INFO] processed {}/{}".format(cnt_files, cnt_files))
         return True
+
+    # this function return dictionary
+    def getDict(self):
+        return self.__ans_list

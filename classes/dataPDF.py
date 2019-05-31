@@ -14,8 +14,9 @@ import os
 import nltk
 from nltk.corpus import stopwords
 from bs4 import BeautifulSoup
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.feature_extraction.text import TfidfTransformer
+import csv
+#from sklearn.feature_extraction.text import CountVectorizer
+#from sklearn.feature_extraction.text import TfidfTransformer
 
 
 # global lists
@@ -52,12 +53,12 @@ class dataPDF:
     __dsurlsjsentropy = []                          # vector of tags, urls, JavaScript and entropy 
     __folder_path = ""                              # path to classes folder
     __isjs_path = "JaSt-master/js/"                 # path for is_js.py code
-   
+    __csv_path = ""
     # constructor
-    def __init__(self, filename, folder_path):
+    def __init__(self, filename, folder_path, dataset):
         self.__folder_path = folder_path + "classes/"
         self.__isjs_path = folder_path + "classes/JaSt-master/js/"
-        self.__filename = folder_path + "PDFiles/" + filename
+        self.__filename = folder_path + dataset + "/" + filename
         self.__image = folder_path + "IMAGES/" + filename.replace('pdf', 'jpg')
         self.__text = folder_path + "TEXTS/" + filename + ".txt"
         if ("mal" == filename.split(".")[0]):
@@ -66,6 +67,7 @@ class dataPDF:
             label = 0
         self.__kind = label
         self.__shortname = filename
+        self.__csv_path = folder_path + "pdfFILES.csv"
 
     # this function extract color histogram for images
     def extract_color_histogram(self, image, bins=(8, 8, 8)):
@@ -127,13 +129,20 @@ class dataPDF:
     # this function save clean text from pdf file
     def save_text(self, text):
         # for vector
-        count_vect = CountVectorizer()
-        text = self.clean_text(text)
-        text = [text]
-        bow_matrix = count_vect.fit_transform(text)
-        self.__text_tfidf  = TfidfTransformer().fit_transform(bow_matrix)
+        # count_vect = CountVectorizer()
+        # text = self.clean_text(text)
+        # text = [text]
+        # bow_matrix = count_vect.fit_transform(text)
+        # self.__text_tfidf  = TfidfTransformer().fit_transform(bow_matrix)
         # for text
-        #self.__text_tfidf = self.clean_text(text)
+        self.__text_tfidf = self.clean_text(text)
+        with open(self.__csv_path, 'a') as csvFile:
+            fields = ['File', 'Text']
+            writer = csv.DictWriter(csvFile, fieldnames = fields)
+            row = [{'File': self.__shortname, 'Text':self.__text_tfidf}]
+            self.__text_tfidf = ''
+            writer.writerows(row)
+        csvFile.close()
 
 
     # function for part of JavaScript
@@ -261,6 +270,14 @@ class dataPDF:
         ans = ans + js
         ans = ans + entropies
         self.__dsurlsjsentropy = np.array(ans)
+
+    # this function return filename
+    def getFilename(self):
+        return self.__filename
+
+    # this function return path to image
+    def getImage(self):
+        return self.__image
 
     # print all information
     def printData(self):
