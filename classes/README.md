@@ -1,4 +1,4 @@
-In order to prepare all the data for our project, we have united the extraction code to three main files (in classes folder):
+In order to prepare all the data for our project, we have united the extraction code to three main files (in classes folder) and imported these classes to the main file (as.py - in Phase5 folder):
  * createDATA.py - Extract image of first page, and extract JS from objects.
  * dataPDF.py - Creates the vectors for image and feature machines (image vector, feature vector).\
  The text vector will be created in the main file.
