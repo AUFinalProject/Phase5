@@ -1,6 +1,7 @@
 In order to prepare all the data for our project, we have united the extraction code to three main files (in classes folder):
  * createDATA.py - Extract image of first page, and extract JS from objects.
- * dataPDF.py - Creates the vectors for image and feature machines (image vector, feature vector).
+ * dataPDF.py - Creates the vectors for image and feature machines (image vector, feature vector).\
+ The text vector will be created in the main file.
  * readPDF.py - Extracts text from the first page, and in case of error, extracts the text from the image of the first page.
  <br>
  
