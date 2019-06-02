@@ -86,19 +86,18 @@ class readPDF:
         # create a PDF interpreter object
         interpreter = PDFPageInterpreter(rsrcmgr, device)
         # Process each page contained in the document
-        for page in PDFPage.get_pages(fp, pagenos, maxpages=0, password="", caching=True, check_extractable=False):
-            try:
+        try:
+            for page in PDFPage.get_pages(fp, pagenos, maxpages=0, password="", caching=True, check_extractable=False):
                 interpreter.process_page(page)
                 data = retstr.getvalue()
                 # number of character is anomaly
                 if (len(data) < 2 or len(data) > 60000):
                     data = self.extract_text_image(imagename)
                 break
-            except Exception as ex:
-                print(ex)
-                print(filename)
-                data = self.extract_text_image(imagename)
-                break
+        except Exception as ex:
+            print(ex)
+            print(filename)
+            data = self.extract_text_image(imagename)
         # Cleanup
         device.close()
         retstr.close()

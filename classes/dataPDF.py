@@ -140,7 +140,7 @@ class dataPDF:
             fields = ['File', 'Text']
             writer = csv.DictWriter(csvFile, fieldnames = fields)
             row = [{'File': self.__shortname, 'Text':self.__text_tfidf}]
-            self.__text_tfidf = ''
+            # self.__text_tfidf = ''
             writer.writerows(row)
         csvFile.close()
 
@@ -275,9 +275,25 @@ class dataPDF:
     def getFilename(self):
         return self.__filename
 
+    # this function return short filename
+    def getShortname(self):
+        return self.__shortname
+
     # this function return path to image
     def getImage(self):
         return self.__image
+
+    # this function returns object histogram
+    def getImgHistogram(self):
+        return self.__histblur
+
+    # this function returns object feature vector
+    def getFeatVec(self):
+        return self.__dsurlsjsentropy
+
+    # this function returns object text
+    def getText(self):
+        return self.__text_tfidf
 
     # print all information
     def printData(self):
