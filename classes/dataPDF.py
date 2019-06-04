@@ -15,8 +15,6 @@ import nltk
 from nltk.corpus import stopwords
 from bs4 import BeautifulSoup
 import csv
-#from sklearn.feature_extraction.text import CountVectorizer
-#from sklearn.feature_extraction.text import TfidfTransformer
 
 
 # global lists
@@ -48,9 +46,9 @@ class dataPDF:
     __text = ""                                     # path to JavaScript from pdf file
     __kind = -1                                     # white - 0, malware - 1
     __shortname = ""                                # name of pdf file
-    __histblur = []                                 # vector of color histogram and blur
+    __histblur = []                                 # vector of color histogram and blur. Length = 513
     __text_tfidf = ""                               # correct text from first page                      or vector for tfidf
-    __dsurlsjsentropy = []                          # vector of tags, urls, JavaScript and entropy 
+    __dsurlsjsentropy = []                          # vector of tags, urls, JavaScript and entropy. Length = 32
     __folder_path = ""                              # path to classes folder
     __isjs_path = "JaSt-master/js/"                 # path for is_js.py code
     __csv_path = ""
@@ -128,19 +126,11 @@ class dataPDF:
     
     # this function save clean text from pdf file
     def save_text(self, text):
-        # for vector
-        # count_vect = CountVectorizer()
-        # text = self.clean_text(text)
-        # text = [text]
-        # bow_matrix = count_vect.fit_transform(text)
-        # self.__text_tfidf  = TfidfTransformer().fit_transform(bow_matrix)
-        # for text
         self.__text_tfidf = self.clean_text(text)
         with open(self.__csv_path, 'a') as csvFile:
             fields = ['File', 'Text']
             writer = csv.DictWriter(csvFile, fieldnames = fields)
             row = [{'File': self.__shortname, 'Text':self.__text_tfidf}]
-            # self.__text_tfidf = ''
             writer.writerows(row)
         csvFile.close()
 
@@ -197,7 +187,7 @@ class dataPDF:
                         type_js = 1
 
             # save and print features
-            features = [num_objects, num_js_lines, num_backslash, num_evals, num_slashx, num_slashu0, type_js,encoding]
+            features = [num_objects, num_js_lines, num_backslash, num_evals, num_slashx, num_slashu0, type_js, encoding]
             return features
 
     # function for part of Entropy
