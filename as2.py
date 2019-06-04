@@ -1,5 +1,5 @@
 # -------------------------------------------------------------------------------------------------------------------------------------------------------------
-# Main, three machines (image - KMC, text - SVM, features - RF)
+# Main, three machines (image - KNN, text - SVM, features - RF)
 # @Authors:  Alexey Titov and Shir Bentabou
 # @Version: 1.0
 # @Date 05-06.2019
@@ -23,9 +23,9 @@ from sklearn.metrics import accuracy_score, classification_report
 from sklearn import metrics
 from sklearn.pipeline import Pipeline, make_pipeline
 # importing K-Means
-from sklearn.cluster import KMeans
+#from sklearn.cluster import KMeans
 # importing KNN
-#from sklearn.neighbors import KNeighborsClassifier
+from sklearn.neighbors import KNeighborsClassifier
 # import RF
 from sklearn.ensemble import RandomForestClassifier
 # import SVM
@@ -151,18 +151,18 @@ if __name__ == "__main__":
     testFeat = np.array(testFeat)
 
     # instantiating kmeans and knn
-    km = KMeans(algorithm = 'auto', copy_x = True, init = 'k-means++', max_iter = 300, n_clusters = args["clusters"], n_init = 10, n_jobs = args["jobs"])
-    #knn = KNeighborsClassifier(algorithm = 'auto', n_neighbors = args["neighbors"], n_jobs = args["jobs"])
+    #km = KMeans(algorithm = 'auto', copy_x = True, init = 'k-means++', max_iter = 300, n_clusters = args["clusters"], n_init = 10, n_jobs = args["jobs"])
+    knn = KNeighborsClassifier(algorithm = 'auto', n_neighbors = args["neighbors"], n_jobs = args["jobs"])
 
     # training knn model
-    #knn.fit(trainFeat, trainLabels)
+    knn.fit(trainFeat, trainLabels)
     # testing knn
-    #predictions1_n = knn.predict(testFeat)
+    predictions1_n = knn.predict(testFeat)
 
     # training km model
-    km.fit(trainFeat)
+    #km.fit(trainFeat)
     # testing km
-    predictions1_m = km.predict(testFeat)
+    #predictions1_m = km.predict(testFeat)
 
     # creating vector for Random Forest on features
     trainFeat = []
@@ -200,7 +200,7 @@ if __name__ == "__main__":
     print("+++++++++++++++++++++++++++++++++++++++ START BOOST +++++++++++++++++++++++++++++++++++++")
     # creating vectors
     trainFeat = []
-    for p1, p2, p3 in zip(predictions1_m, predictions2, predictions3):
+    for p1, p2, p3 in zip(predictions1_n, predictions2, predictions3):
         p_all = [p1, p2, p3]
         trainFeat.append(p_all)
     trainFeat = np.array(trainFeat)
@@ -248,4 +248,3 @@ if __name__ == "__main__":
     accuracy = accuracy_score(testLabels, predictions.round())
     print("Accuracy of XGBRegressor: %.2f%%" % (accuracy * 100.0))
     print("\n+++++++++++++++++++++++++++++++++++++++++ FINISH ++++++++++++++++++++++++++++++++++++++++\n")
-

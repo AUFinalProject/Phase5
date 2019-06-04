@@ -1,5 +1,5 @@
 # -------------------------------------------------------------------------------------------------------------------------------------------------------------
-# Main, three machines (image - KMC, text - SVM, features - RF)
+# Main, union vectors
 # @Authors:  Alexey Titov and Shir Bentabou
 # @Version: 1.0
 # @Date 05-06.2019
@@ -17,19 +17,12 @@ import tempfile
 import numpy as np
 from numpy import random
 # machine learning libraries
-from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.decomposition.truncated_svd import TruncatedSVD
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, classification_report
 from sklearn import metrics
 from sklearn.pipeline import Pipeline, make_pipeline
-# importing K-Means
-from sklearn.cluster import KMeans
-# importing KNN
-#from sklearn.neighbors import KNeighborsClassifier
-# import RF
-from sklearn.ensemble import RandomForestClassifier
-# import SVM
-from sklearn.linear_model import SGDClassifier
 # import AdaBoostClassifier
 from sklearn.ensemble import AdaBoostClassifier
 # import AdaBoostRegressor
@@ -44,14 +37,6 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("-d", "--dataset", required=True,
                     help="path to input dataset")
-    # argument for KNN
-    ap.add_argument("-k", "--neighbors", type = int, default = 5,
-		help="# of nearest neighbors for classification")
-    # arguments for k-means-clustering
-    ap.add_argument("-c", "--clusters", type = int, default = 5,
-		help="the number of clusters to form as well as the number of centroids to generate")
-    ap.add_argument("-j", "--jobs", type = int, default = -1,
-		help="the number of jobs to use for the computation. ")
     args = vars(ap.parse_args())
     # define the name of the directory to be created
     path_IMAGES = "IMAGES"
@@ -80,7 +65,6 @@ if __name__ == "__main__":
             fields = ['File', 'Text']
             writer = csv.DictWriter(csvFile, fieldnames = fields)
             writer.writeheader()
-    csvFile.close()
     # start create data
     print("+++++++++++++++++++++++++++++++++++ START CREATE DATA +++++++++++++++++++++++++++++++++++")
     obj_data = createDATA(folder_path, args["dataset"])
@@ -134,80 +118,53 @@ if __name__ == "__main__":
     print("[INFO] processed {}/{}".format(cnt_files, cnt_files))
     print("\n+++++++++++++++++++++++++++++++++++++++++ FINISH ++++++++++++++++++++++++++++++++++++++++\n")
  
-    # start machine learning
-    print("+++++++++++++++++++++++++++++++++ START MACHINE LEARNING ++++++++++++++++++++++++++++++++")
+    # start union vectors 
+    print("+++++++++++++++++++++++++++++++++ START UNION VECTORS ++++++++++++++++++++++++++++++++")
     labels = np.array(labels)
     my_tags = ['0','1']
-    # partition the data into training and testing splits, using 50%
-    # of the data for training and the remaining 50% for testing
-    (trainF, testF, trainLabels, testLabels) = train_test_split(obj_pdfs, labels, test_size = 0.50, random_state = 42)
-    trainFeat = []
-    testFeat = []
+    # partition the data into training and testing splits, using 80%
+    # of the data for training and the remaining 20% for testing
+    (trainF, testF, trainLabels, testLabels) = train_test_split(obj_pdfs, labels, test_size = 0.20, random_state = 42)
+    
+    # text for train
+    trainForVector = []
     for pdf in trainF:
-        trainFeat.append(pdf.getImgHistogram())
+        trainForVector.append(pdf.getText())
+
+    # text for test
     for pdf in testF:
-        testFeat.append(pdf.getImgHistogram())
+        trainForVector.append(pdf.getText())
+
+    # strip_accents = 'unicode' : replace all accented unicode char ;  use_idf = True : enable inverse-document-frequency reweighting ;
+    # smooth_idf = True : prevents zero division for unseen words
+    tfidf_vect= TfidfVectorizer(strip_accents = 'unicode', use_idf = True, smooth_idf = True, sublinear_tf = False)
+    trainForVector = tfidf_vect.fit_transform(trainForVector)
+    num_features = len(tfidf_vect.get_feature_names())
+    # n_components : Desired dimensionality of output data. Must be strictly less than the number of features.
+    # n_iter : Number of iterations for randomized SVD solver. 
+    # random_state : If int, random_state is the seed used by the random number generator.
+    pca = TruncatedSVD(n_components = num_features-1, n_iter = 7, random_state = 42)
+    trainForVector = pca.fit_transform(trainForVector)
+
+    # train
+    i = 0
+    trainFeat = []
+    for pdf in trainF:
+        v_all = list(pdf.getImgHistogram()) + list(trainForVector[i]) + list(pdf.getFeatVec())
+        trainFeat.append(v_all)
+        i += 1
+    # test
+    testFeat = []
+    for pdf in testF:
+        v_all = list(pdf.getImgHistogram()) + list(trainForVector[i]) + list(pdf.getFeatVec())
+        testFeat.append(v_all)
+        i += 1
     trainFeat = np.array(trainFeat)
     testFeat = np.array(testFeat)
-
-    # instantiating kmeans and knn
-    km = KMeans(algorithm = 'auto', copy_x = True, init = 'k-means++', max_iter = 300, n_clusters = args["clusters"], n_init = 10, n_jobs = args["jobs"])
-    #knn = KNeighborsClassifier(algorithm = 'auto', n_neighbors = args["neighbors"], n_jobs = args["jobs"])
-
-    # training knn model
-    #knn.fit(trainFeat, trainLabels)
-    # testing knn
-    #predictions1_n = knn.predict(testFeat)
-
-    # training km model
-    km.fit(trainFeat)
-    # testing km
-    predictions1_m = km.predict(testFeat)
-
-    # creating vector for Random Forest on features
-    trainFeat = []
-    testFeat = []
-    for pdf in trainF:
-        trainFeat.append(pdf.getFeatVec())
-    for pdf in testF:
-        testFeat.append(pdf.getFeatVec())
-    trainFeat = np.array(trainFeat)
-    testFeat = np.array(testFeat)
-    # instantiating Random Forest
-    ranfor = Pipeline([
-        ('clf', RandomForestClassifier(n_estimators = 30, random_state = 0)),
-    ])
-    ranfor.fit(trainFeat, trainLabels)
-    predictions3 = ranfor.predict(testFeat)
-
-    # creating vector for SVM on text
-    trainFeat = []
-    testFeat = []
-    for pdf in trainF:
-        trainFeat.append(pdf.getText())
-    for pdf in testF:
-        testFeat.append(pdf.getText())
-    # instantiating Linear Support Vector Machine
-    sgd = Pipeline([('vect', CountVectorizer()),
-                ('tfidf', TfidfTransformer()),
-                ('clf', SGDClassifier(loss = 'hinge', penalty = 'l2', alpha = 1e-3, random_state = 42, max_iter = 200, tol = 1e-3)),
-               ])
-    sgd.fit(trainFeat, trainLabels)
-    predictions2 = sgd.predict(testFeat)
     print("\n+++++++++++++++++++++++++++++++++++++++++ FINISH ++++++++++++++++++++++++++++++++++++++++\n")
 
     # start boost
     print("+++++++++++++++++++++++++++++++++++++++ START BOOST +++++++++++++++++++++++++++++++++++++")
-    # creating vectors
-    trainFeat = []
-    for p1, p2, p3 in zip(predictions1_m, predictions2, predictions3):
-        p_all = [p1, p2, p3]
-        trainFeat.append(p_all)
-    trainFeat = np.array(trainFeat)
-    # partition the data into training and testing splits, using 60%
-    # of the data for training and the remaining 40% for testing
-    (trainFeat, testFeat, trainLabels, testLabels) = train_test_split(trainFeat, testLabels, test_size = 0.60, random_state = 42)
-
     # instantiating AdaBoostClassifier
     abc = AdaBoostClassifier(n_estimators = 100, random_state = 0)
     abc.fit(trainFeat, trainLabels)
