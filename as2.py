@@ -17,13 +17,11 @@ import tempfile
 import numpy as np
 from numpy import random
 # machine learning libraries
-from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer, TfidfTransformer
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, classification_report
 from sklearn import metrics
 from sklearn.pipeline import Pipeline, make_pipeline
-# importing K-Means
-#from sklearn.cluster import KMeans
 # importing KNN
 from sklearn.neighbors import KNeighborsClassifier
 # import RF
@@ -47,9 +45,6 @@ if __name__ == "__main__":
     # argument for KNN
     ap.add_argument("-k", "--neighbors", type = int, default = 5,
 		help="# of nearest neighbors for classification")
-    # arguments for k-means-clustering
-    ap.add_argument("-c", "--clusters", type = int, default = 5,
-		help="the number of clusters to form as well as the number of centroids to generate")
     ap.add_argument("-j", "--jobs", type = int, default = -1,
 		help="the number of jobs to use for the computation. ")
     args = vars(ap.parse_args())
@@ -80,7 +75,6 @@ if __name__ == "__main__":
             fields = ['File', 'Text']
             writer = csv.DictWriter(csvFile, fieldnames = fields)
             writer.writeheader()
-    csvFile.close()
     # start create data
     print("+++++++++++++++++++++++++++++++++++ START CREATE DATA +++++++++++++++++++++++++++++++++++")
     obj_data = createDATA(folder_path, args["dataset"])
@@ -150,19 +144,13 @@ if __name__ == "__main__":
     trainFeat = np.array(trainFeat)
     testFeat = np.array(testFeat)
 
-    # instantiating kmeans and knn
-    #km = KMeans(algorithm = 'auto', copy_x = True, init = 'k-means++', max_iter = 300, n_clusters = args["clusters"], n_init = 10, n_jobs = args["jobs"])
+    # instantiating knn
     knn = KNeighborsClassifier(algorithm = 'auto', n_neighbors = args["neighbors"], n_jobs = args["jobs"])
 
     # training knn model
     knn.fit(trainFeat, trainLabels)
     # testing knn
     predictions1_n = knn.predict(testFeat)
-
-    # training km model
-    #km.fit(trainFeat)
-    # testing km
-    #predictions1_m = km.predict(testFeat)
 
     # creating vector for Random Forest on features
     trainFeat = []
@@ -225,8 +213,11 @@ if __name__ == "__main__":
     print(abr.feature_importances_)
     # make predictions for test data
     predictions = abr.predict(testFeat)
-    accuracy = accuracy_score(testLabels, predictions)
-    print("Accuracy of AdaBoostRegressor: %.2f%%" % (accuracy * 100.0))
+    try:
+        accuracy = accuracy_score(testLabels, predictions.round())
+        print("Accuracy of AdaBoostRegressor: %.2f%%" % (accuracy * 100.0))
+    except Exception:
+        print("Accuracy of AdaBoostRegressor: except")
 
     # instantiating XGBClassifier
     xgbc = XGBClassifier()

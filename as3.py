@@ -47,11 +47,9 @@ if __name__ == "__main__":
         os.mkdir(path_IMAGES)
         os.mkdir(path_TEXTS)
     except OSError:
-        print("[!] Creation of the directories {} or {} failed, maybe the folders are exist".format(
-            path_IMAGES, path_TEXTS))
+        print("[!] Creation of the directories {} or {} failed, maybe the folders are exist".format(path_IMAGES, path_TEXTS))
     else:
-        print(
-            "[*] Successfully created the directories {} and {} ".format(path_IMAGES, path_TEXTS))
+        print("[*] Successfully created the directories {} and {} ".format(path_IMAGES, path_TEXTS))
     folder_path = os.getcwd()
     dataset_path = os.path.join(folder_path, args["dataset"])
 
@@ -78,7 +76,7 @@ if __name__ == "__main__":
         sys.exit()
 
     # extract JavaScript from pdf file
-    result = obj_data.extract(dataset_path)
+    result = True#obj_data.extract(dataset_path)
     if (result):
         print("[*] Succces extract JavaScript from pdf files")
     else:
@@ -125,7 +123,8 @@ if __name__ == "__main__":
     # partition the data into training and testing splits, using 80%
     # of the data for training and the remaining 20% for testing
     (trainF, testF, trainLabels, testLabels) = train_test_split(obj_pdfs, labels, test_size = 0.20, random_state = 42)
-    
+    obj_pdfs = 0
+    labels = 0
     # text for train
     trainForVector = []
     for pdf in trainF:
@@ -136,14 +135,16 @@ if __name__ == "__main__":
         trainForVector.append(pdf.getText())
 
     # strip_accents = 'unicode' : replace all accented unicode char ;  use_idf = True : enable inverse-document-frequency reweighting ;
-    # smooth_idf = True : prevents zero division for unseen words
-    tfidf_vect= TfidfVectorizer(strip_accents = 'unicode', use_idf = True, smooth_idf = True, sublinear_tf = False)
+    # smooth_idf = True : prevents zero division for unseen words   ;  
+    # max_features : If not None, build a vocabulary that only consider the top max_features ordered by term frequency across the corpus
+    tfidf_vect= TfidfVectorizer(strip_accents = 'unicode', max_features = 500 ,use_idf = True, smooth_idf = True, sublinear_tf = False)
     trainForVector = tfidf_vect.fit_transform(trainForVector)
     num_features = len(tfidf_vect.get_feature_names())
     # n_components : Desired dimensionality of output data. Must be strictly less than the number of features.
     # n_iter : Number of iterations for randomized SVD solver. 
     # random_state : If int, random_state is the seed used by the random number generator.
-    pca = TruncatedSVD(n_components = num_features-1, n_iter = 7, random_state = 42)
+    #pca = TruncatedSVD(n_components = num_features-1, n_iter = 7, random_state = 42)
+    pca = TruncatedSVD(n_components = 300, n_iter = 7, random_state = 42)
     trainForVector = pca.fit_transform(trainForVector)
 
     # train
@@ -159,6 +160,7 @@ if __name__ == "__main__":
         v_all = list(pdf.getImgHistogram()) + list(trainForVector[i]) + list(pdf.getFeatVec())
         testFeat.append(v_all)
         i += 1
+    trainForVector = 0
     trainFeat = np.array(trainFeat)
     testFeat = np.array(testFeat)
     print("\n+++++++++++++++++++++++++++++++++++++++++ FINISH ++++++++++++++++++++++++++++++++++++++++\n")
@@ -182,7 +184,7 @@ if __name__ == "__main__":
     print(abr.feature_importances_)
     # make predictions for test data
     predictions = abr.predict(testFeat)
-    accuracy = accuracy_score(testLabels, predictions)
+    accuracy = accuracy_score(testLabels, predictions.round())
     print("Accuracy of AdaBoostRegressor: %.2f%%" % (accuracy * 100.0))
 
     # instantiating XGBClassifier
@@ -205,4 +207,3 @@ if __name__ == "__main__":
     accuracy = accuracy_score(testLabels, predictions.round())
     print("Accuracy of XGBRegressor: %.2f%%" % (accuracy * 100.0))
     print("\n+++++++++++++++++++++++++++++++++++++++++ FINISH ++++++++++++++++++++++++++++++++++++++++\n")
-
