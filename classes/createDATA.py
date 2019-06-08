@@ -90,11 +90,7 @@ class createDATA:
 
                 # save image
                 for page in images_from_path:
-                    page.save(
-                        os.path.join(
-                            self.__images_path,
-                            base_filename),
-                        'JPEG')
+                    page.save(os.path.join(self.__images_path, base_filename), 'JPEG')
                 i += 1
 
                 # update ans_list
