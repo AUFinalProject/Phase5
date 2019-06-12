@@ -19,7 +19,7 @@ from numpy import random
 # machine learning libraries
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer, TfidfTransformer
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, classification_report
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 from sklearn import metrics
 from sklearn.pipeline import Pipeline, make_pipeline
 # importing K-Means
@@ -43,7 +43,7 @@ if __name__ == "__main__":
     ap.add_argument("-d", "--dataset", required=True,
                     help="path to input dataset")
     # arguments for k-means-clustering
-    ap.add_argument("-c", "--clusters", type = int, default = 12,
+    ap.add_argument("-c", "--clusters", type = int, default = 16,
 		help="the number of clusters to form as well as the number of centroids to generate")
     ap.add_argument("-j", "--jobs", type = int, default = -1,
 		help="the number of jobs to use for the computation. ")
@@ -143,7 +143,6 @@ if __name__ == "__main__":
         testFeat.append(pdf.getImgHistogram())
     trainFeat = np.array(trainFeat)
     testFeat = np.array(testFeat)
-
     # instantiating kmeans
     km = KMeans(algorithm = 'auto', copy_x = True, init = 'k-means++', max_iter = 300, n_clusters = args["clusters"], n_init = 10, n_jobs = args["jobs"])
 
@@ -161,6 +160,7 @@ if __name__ == "__main__":
         testFeat.append(pdf.getFeatVec())
     trainFeat = np.array(trainFeat)
     testFeat = np.array(testFeat)
+    
     # instantiating Random Forest
     ranfor = Pipeline([
         ('clf', RandomForestClassifier(n_estimators = 30, random_state = 0)),
@@ -205,6 +205,9 @@ if __name__ == "__main__":
     predictions = abc.predict(testFeat)
     accuracy = accuracy_score(testLabels, predictions)
     print("Accuracy of AdaBoostClassifier: %.2f%%" % (accuracy * 100.0))
+    cm = confusion_matrix(testLabels, predictions)
+    # the count of true negatives is A00, false negatives is A10, true positives is A11 and false positives is A01
+    print('confusion matrix:\n %s' % cm)
 
     # instantiating AdaBoostRegressor (similar to logistic regression)
     abr = AdaBoostRegressor(random_state = 0, n_estimators = 100)
@@ -215,6 +218,9 @@ if __name__ == "__main__":
     predictions = abr.predict(testFeat)
     accuracy = accuracy_score(testLabels, predictions.round())
     print("Accuracy of AdaBoostRegressor: %.2f%%" % (accuracy * 100.0))
+    cm = confusion_matrix(testLabels, predictions.round())
+    # the count of true negatives is A00, false negatives is A10, true positives is A11 and false positives is A01
+    print('confusion matrix:\n %s' % cm)
 
     # instantiating XGBClassifier
     xgbc = XGBClassifier()
@@ -225,6 +231,9 @@ if __name__ == "__main__":
     predictions = xgbc.predict(testFeat)
     accuracy = accuracy_score(testLabels, predictions)
     print("Accuracy of XGBClassifier: %.2f%%" % (accuracy * 100.0))
+    cm = confusion_matrix(testLabels, predictions)
+    # the count of true negatives is A00, false negatives is A10, true positives is A11 and false positives is A01
+    print('confusion matrix:\n %s' % cm)
 
     # instantiating XGBRegressor (similar to linear regression)
     xgbr = XGBRegressor(n_estimators = 100, max_depth = 3)
@@ -235,5 +244,8 @@ if __name__ == "__main__":
     predictions = xgbr.predict(testFeat)
     accuracy = accuracy_score(testLabels, predictions.round())
     print("Accuracy of XGBRegressor: %.2f%%" % (accuracy * 100.0))
+    cm = confusion_matrix(testLabels, predictions.round())
+    # the count of true negatives is A00, false negatives is A10, true positives is A11 and false positives is A01
+    print('confusion matrix:\n %s' % cm)
     print("\n+++++++++++++++++++++++++++++++++++++++++ FINISH ++++++++++++++++++++++++++++++++++++++++\n")
 

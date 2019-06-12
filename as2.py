@@ -19,7 +19,7 @@ from numpy import random
 # machine learning libraries
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer, TfidfTransformer
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, classification_report
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 from sklearn import metrics
 from sklearn.pipeline import Pipeline, make_pipeline
 # importing KNN
@@ -205,6 +205,9 @@ if __name__ == "__main__":
     predictions = abc.predict(testFeat)
     accuracy = accuracy_score(testLabels, predictions)
     print("Accuracy of AdaBoostClassifier: %.2f%%" % (accuracy * 100.0))
+    cm = confusion_matrix(testLabels, predictions)
+    # the count of true negatives is A00, false negatives is A10, true positives is A11 and false positives is A01
+    print('confusion matrix:\n %s' % cm)
 
     # instantiating AdaBoostRegressor (similar to logistic regression)
     abr = AdaBoostRegressor(random_state = 0, n_estimators = 100)
@@ -216,6 +219,9 @@ if __name__ == "__main__":
     try:
         accuracy = accuracy_score(testLabels, predictions.round())
         print("Accuracy of AdaBoostRegressor: %.2f%%" % (accuracy * 100.0))
+        cm = confusion_matrix(testLabels, predictions.round())
+        # the count of true negatives is A00, false negatives is A10, true positives is A11 and false positives is A01
+        print('confusion matrix:\n %s' % cm)
     except Exception:
         print("Accuracy of AdaBoostRegressor: except")
 
@@ -228,6 +234,9 @@ if __name__ == "__main__":
     predictions = xgbc.predict(testFeat)
     accuracy = accuracy_score(testLabels, predictions)
     print("Accuracy of XGBClassifier: %.2f%%" % (accuracy * 100.0))
+    cm = confusion_matrix(testLabels, predictions)
+    # the count of true negatives is A00, false negatives is A10, true positives is A11 and false positives is A01
+    print('confusion matrix:\n %s' % cm)
 
     # instantiating XGBRegressor (similar to linear regression)
     xgbr = XGBRegressor(n_estimators = 100, max_depth = 3)
@@ -238,4 +247,7 @@ if __name__ == "__main__":
     predictions = xgbr.predict(testFeat)
     accuracy = accuracy_score(testLabels, predictions.round())
     print("Accuracy of XGBRegressor: %.2f%%" % (accuracy * 100.0))
+    cm = confusion_matrix(testLabels, predictions.round())
+    # the count of true negatives is A00, false negatives is A10, true positives is A11 and false positives is A01
+    print('confusion matrix:\n %s' % cm)
     print("\n+++++++++++++++++++++++++++++++++++++++++ FINISH ++++++++++++++++++++++++++++++++++++++++\n")
