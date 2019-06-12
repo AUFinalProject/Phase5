@@ -51,7 +51,7 @@ class createDATA:
     def add_ans_list(self, save_dir, base_filename, filename):
         try:
             name = os.path.join(save_dir, base_filename)
-            pdfFile = PdfFileReader(file(filename, 'rb'))
+            pdfFile = PdfFileReader(open(filename, 'rb'), strict = False)
             catalog = pdfFile.trailer['/Root'].getObject()
             if "/Lang" in catalog:
                 lang = catalog['/Lang'].getObject()
@@ -63,7 +63,9 @@ class createDATA:
                     self.__ans_list.update({name: [4, language]})
             else:
                 self.__ans_list.update({name: [2, 'None']})
-        except BaseException:
+        except Exception as ex:
+            #print(filename)
+            #print(ex)
             self.__ans_list.update({name: [1, 'None']})
 
     # this function convert pdf file to jpg file
@@ -81,6 +83,7 @@ class createDATA:
         for filepdf in files:
             try:
                 filename = os.path.join(dirpdf, filepdf)
+                images_from_path = 0
                 with tempfile.TemporaryDirectory() as path:
                     images_from_path = convert_from_path(
                         filename, output_folder=path, last_page=1, first_page=0)
@@ -101,7 +104,8 @@ class createDATA:
                     print("[INFO] processed {}/{}".format(i, cnt_files))
             except Exception:
                 # always keep track the error until the code has been clean
-                print("[!] Convert PDF to JPEG")
+                print("[!] Convert PDF to JPEG " + filepdf)
+                continue
                 return False
         print("[INFO] processed {}/{}".format(cnt_files, cnt_files))
         return True
@@ -147,13 +151,14 @@ class createDATA:
                         continue
                     temp_file.close()
                     fi_na.close()
+                i += 1
                 # show an update every 50 pdf files
                 if (i > 0 and i % 50 == 0):
                     print("[INFO] processed {}/{}".format(i, cnt_files))
             except Exception as ex:
-                print(ex)
+                #print(ex)
                 # always keep track the error until the code has been clean
-                print("[!] Extract JavaScript to TXT")
+                print("[!] Extract JavaScript to TXT " + filepdf)
                 return False
         print("[INFO] processed {}/{}".format(cnt_files, cnt_files))
         return True

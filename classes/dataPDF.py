@@ -20,7 +20,7 @@ import csv
 # global lists
 port_good = [":443/", ":80/", ":8080/"]
 bad_word = ["target", "&", "?", "download", "php", "loader", "login", "=", "+"]
-default_features = ["obj", "endobj", "stream", "endstream", "/ObjStm ", "/JS", "/JavaScript", "/AA", "/Launch", "/OpenAction", "/AcroForm", "/RichMedia"]
+default_features = ["obj", "endobj", "stream", "endstream", "/ObjStm", "/JS", "/JavaScript", "/AA", "/Launch", "/OpenAction", "/AcroForm", "/RichMedia"]
 #                     0       1         2           3           4          5         6          7        11            8             9            10
 # /ObjStm counts the number of object streams. An object stream is a stream object that can contain other objects, and can therefor be used to obfuscate objects (by using different filters).
 # /JS and /JavaScript indicate that the PDF document contains JavaScript.
@@ -44,7 +44,6 @@ class dataPDF:
     __filename = ""                                 # path to pdf file
     __image = ""                                    # path to image of pdf file
     __text = ""                                     # path to JavaScript from pdf file
-    __kind = -1                                     # white - 0, malware - 1
     __shortname = ""                                # name of pdf file
     __histblur = []                                 # vector of color histogram and blur. Length = 513
     __text_tfidf = ""                               # correct text from first page                      or vector for tfidf
@@ -59,57 +58,63 @@ class dataPDF:
         self.__filename = folder_path + dataset + "/" + filename
         self.__image = folder_path + "IMAGES/" + filename.replace('pdf', 'jpg')
         self.__text = folder_path + "TEXTS/" + filename + ".txt"
-        if ("mal" == filename.split(".")[0]):
-            label = 1
-        else:
-            label = 0
-        self.__kind = label
         self.__shortname = filename
         self.__csv_path = folder_path + "pdfFILES.csv"
 
     # this function extract color histogram for images
     def extract_color_histogram(self, image, bins=(8, 8, 8)):
-        # extract a 3D color histogram from the HSV color space using
-        # the supplied number of `bins` per channel
-        hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-        hist = cv2.calcHist([hsv], [0, 1, 2], None, bins,
-                            [0, 180, 0, 256, 0, 256])
+        try:
+            # extract a 3D color histogram from the HSV color space using
+            # the supplied number of `bins` per channel
+            hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+            hist = cv2.calcHist([hsv], [0, 1, 2], None, bins,[0, 180, 0, 256, 0, 256])
 
-        # handle normalizing the histogram if we are using OpenCV 2.4.X
-        if imutils.is_cv2():
-            hist = cv2.normalize(hist)
+            # handle normalizing the histogram if we are using OpenCV 2.4.X
+            if imutils.is_cv2():
+                hist = cv2.normalize(hist)
 
-        # otherwise, perform "in place" normalization in OpenCV 3 (I
-        # personally hate the way this is done
-        else:
-            cv2.normalize(hist, hist)
+            # otherwise, perform "in place" normalization in OpenCV 3 (I
+            # personally hate the way this is done
+            else:
+                cv2.normalize(hist, hist)
 
-        # return the flattened histogram as the feature vector
-        return hist.flatten()
+            # return the flattened histogram as the feature vector
+            return hist.flatten()
+        except Exception:
+            hist = list([-1]*512)                         # -1, error. Using the * operator for initialization 
+            return hist  
+
 
     # this function detect blur
     def detect_image_blur(self, imgPath):
-        image = cv2.imread(imgPath)
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        score = cv2.Laplacian(image, cv2.CV_64F).var()
-        detect = {score}                                    # score < 110, an image is blur
-        return detect
+        try:
+            image = cv2.imread(imgPath)
+            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+            score = cv2.Laplacian(image, cv2.CV_64F).var()
+            detect = {score}                                    # score < 110, an image is blur
+            return detect
+        except Exception:
+            detect = {-1}                                       # -1, error
+            return detect
 
     # calculate histogram and blur
     def calculate_histogram_blur(self):
-        # load the image and extract the class label (assuming that our
-        # path as the format: /path/to/dataset/{class}.{image_num}.jpg
-        image = cv2.imread(self.__image)
+        try:
+            # load the image and extract the class label (assuming that our
+            # path as the format: /path/to/dataset/{class}.{image_num}.jpg
+            image = cv2.imread(self.__image)
 
-        # histogram to characterize the color distribution of the pixels
-        # in the image
-        hist = self.extract_color_histogram(image)
+            # histogram to characterize the color distribution of the pixels
+            # in the image
+            hist = self.extract_color_histogram(image)
 
-        # detect blur
-        blur = self.detect_image_blur(self.__image)
+            # detect blur
+            blur = self.detect_image_blur(self.__image)
         
-        hist = list(hist) + list(blur)
-        self.__histblur = np.array(hist)
+            hist = list(hist) + list(blur)
+            self.__histblur = np.array(hist)
+        except Exception:
+            self.__histblur = list([-1]*513)                         # -1, error. Using the * operator for initialization 
 
     # this function clean text from garbage
     def clean_text(self, text):
@@ -198,11 +203,13 @@ class dataPDF:
             ans = []
             p = subprocess.Popen(['python', self.__folder_path + 'AnalyzePDF-master/AnalyzePDF.py', self.__filename], stdout=subprocess.PIPE)
             p.wait()
-            for line in p.stdout:
+            for (i, line) in enumerate(p.stdout):
                 line = str(line)
                 pattern = r"(\d+.\d+)"
                 num = re.search(pattern, line).group()
                 ans.append(float(num))
+                if(i == 2):
+                    break
             return ans
         except Exception:
             ex = [-1, -1, -1]
@@ -290,7 +297,6 @@ class dataPDF:
         print(self.__filename)
         print(self.__image)
         print(self.__text)
-        print(str(self.__kind))
         print(self.__shortname)
         print(self.__histblur)
         print(self.__text_tfidf)
