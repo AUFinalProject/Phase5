@@ -41,3 +41,5 @@ extract js > /home/tzar/Desktop/Final_Project/phase5/JSfromPDF.txt
 with:
 extract js > /newdrive/home/tzar/Desktop/Final_Project/shir_test/JSfromPDF.txt
 
+
+https://stackoverflow.com/questions/10592605/save-classifier-to-disk-in-scikit-learn
