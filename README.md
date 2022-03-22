@@ -17,3 +17,5 @@ you need to install python2 - and then install a shit ton of libraries as well.
 This thing runs on python3 but calls python2 on several occasions.
 
 You also need python3. you should find a way so python redirects to python2 and python3 does python3 as usual. if you fail to do so, edit the classes (createDATA, etc...) and manually set the 'python' command to 'python2'
+
+python2 -m pip install opencv-python==4.2.0.32
