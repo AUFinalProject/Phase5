@@ -32,3 +32,12 @@ in jast, in folder js, in is_js.py - change nodejs to node if you used nvm to in
 pip2 install pdfminer==20140328
 
 pip3 install pdfminer.six==20181108
+
+
+In ExtractJS.txt:
+replace: 
+extract js > /home/tzar/Desktop/Final_Project/phase5/JSfromPDF.txt
+
+with:
+extract js > /newdrive/home/tzar/Desktop/Final_Project/shir_test/JSfromPDF.txt
+
