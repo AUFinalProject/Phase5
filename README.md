@@ -27,3 +27,8 @@ npm -v
 3.5.2
 
 in jast, in folder js, in is_js.py - change nodejs to node if you used nvm to install nodejs (fucking shit)...
+
+
+pip2 install pdfminer==20140328
+
+pip3 install pdfminer.six==20181108
